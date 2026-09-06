@@ -1,0 +1,42 @@
+# 书虫LLM Agent - 依赖清单
+
+# Web服务
+fastapi>=0.100.0
+uvicorn>=0.23.0
+python-multipart>=0.0.6
+
+# 数据库
+sqlalchemy>=2.0.0
+aiosqlite>=0.19.0
+
+# 数据处理
+pydantic>=2.0.0
+python-dotenv>=1.0.0
+
+# HTTP客户端
+httpx>=0.24.0
+
+# 日志
+loguru>=0.7.0
+
+# 开发工具
+pytest>=7.4.0
+
+# LlamaIndex核心（保留原有功能）
+llama-index-core>=0.10.0
+llama-index-llms-openai>=0.1.0
+llama-index-embeddings-openai>=0.1.0
+llama-index-readers-file>=0.1.0
+
+# 图数据库（保留原有功能）
+neo4j>=5.0.0
+
+# 向量数据库（保留原有功能）
+chromadb>=0.4.0
+
+# 文档处理（保留原有功能）
+PyPDF2>=3.0.0
+ebooklib>=0.18
+python-docx>=0.8.11
+beautifulsoup4>=4.12.0
+markdown>=3.4.0
