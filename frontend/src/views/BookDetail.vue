@@ -107,7 +107,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import axios from 'axios'
+import api from '../api/index'
 import { formatDateTime } from '../utils/date'
 import { useCoverColor } from '../composables/useCoverColor'
 import Modal from '../components/Modal.vue'
@@ -124,7 +124,7 @@ const newRecord = ref({ content: '', excerpt: '', page_number: null, tags: '' })
 
 const fetchBook = async () => {
   try {
-    const response = await axios.get(`/api/bookshelf/books/${route.params.id}`)
+    const response = await api.get(`/bookshelf/books/${route.params.id}`)
     book.value = response.data
   } catch (error) {
     console.error('获取书籍详情失败:', error)
@@ -134,7 +134,7 @@ const fetchBook = async () => {
 
 const fetchRecords = async () => {
   try {
-    const response = await axios.get(`/api/bookshelf/books/${route.params.id}/records`)
+    const response = await api.get(`/bookshelf/books/${route.params.id}/records`)
     records.value = response.data
   } catch (error) {
     console.error('获取阅读记录失败:', error)
@@ -148,7 +148,7 @@ onMounted(() => {
 
 const updateStatus = async (status) => {
   try {
-    await axios.put(`/api/bookshelf/books/${book.value.id}/status`, null, { params: { status } })
+    await api.put(`/bookshelf/books/${book.value.id}/status`, null, { params: { status } })
     book.value.user_status = status
   } catch (error) {
     console.error('更新状态失败:', error)
@@ -158,7 +158,7 @@ const updateStatus = async (status) => {
 const deleteBook = async () => {
   if (!confirm('确定要删除这本书吗？')) return
   try {
-    await axios.delete(`/api/bookshelf/books/${book.value.id}`)
+    await api.delete(`/bookshelf/books/${book.value.id}`)
     router.push('/')
   } catch (error) {
     console.error('删除书籍失败:', error)
@@ -172,7 +172,7 @@ const addRecord = async () => {
   }
   addingRecord.value = true
   try {
-    await axios.post(`/api/bookshelf/books/${book.value.id}/records`, newRecord.value)
+    await api.post(`/bookshelf/books/${book.value.id}/records`, newRecord.value)
     await fetchRecords()
     showAddRecord.value = false
     newRecord.value = { content: '', excerpt: '', page_number: null, tags: '' }
@@ -189,7 +189,13 @@ const addRecord = async () => {
 .book-detail {
   max-width: 800px;
   margin: 0 auto;
-  padding: var(--space-lg);
+  padding: var(--space-md) var(--space-md) calc(var(--space-md) + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 768px) {
+  .book-detail {
+    padding: var(--space-lg);
+  }
 }
 
 .page-header {
@@ -205,11 +211,18 @@ const addRecord = async () => {
 
 .book-cover {
   display: inline-block;
-  width: 200px;
-  height: 280px;
+  width: 160px;
+  height: 224px;
   border-radius: var(--radius-md);
   overflow: hidden;
   box-shadow: var(--shadow-lg);
+}
+
+@media (min-width: 480px) {
+  .book-cover {
+    width: 200px;
+    height: 280px;
+  }
 }
 
 .book-cover--dimmed {
@@ -240,10 +253,16 @@ const addRecord = async () => {
 }
 
 .book-title {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 600;
   color: var(--color-text-primary);
   margin-bottom: var(--space-sm);
+}
+
+@media (min-width: 480px) {
+  .book-title {
+    font-size: 24px;
+  }
 }
 
 .book-author {
@@ -260,7 +279,7 @@ const addRecord = async () => {
 }
 
 .status-btn {
-  padding: var(--space-sm) var(--space-lg);
+  padding: var(--space-sm) var(--space-md);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-full);
   background: var(--color-bg-card);
@@ -268,6 +287,14 @@ const addRecord = async () => {
   transition: all var(--transition-fast);
   font-size: 14px;
   color: var(--color-text-regular);
+  min-height: 44px;
+  min-width: 44px;
+}
+
+@media (min-width: 480px) {
+  .status-btn {
+    padding: var(--space-sm) var(--space-lg);
+  }
 }
 
 .status-btn:hover {

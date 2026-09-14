@@ -133,7 +133,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
+import api from '../api/index'
 import { useCoverColor } from '../composables/useCoverColor'
 import Modal from '../components/Modal.vue'
 import EmptyState from '../components/EmptyState.vue'
@@ -168,7 +168,7 @@ const adding = ref(false)
 
 const fetchBooks = async () => {
   try {
-    const response = await axios.get('/api/bookshelf/books')
+    const response = await api.get('/bookshelf/books')
     books.value = response.data
   } catch (error) {
     console.error('获取书籍列表失败:', error)
@@ -209,7 +209,7 @@ const processFile = async (file) => {
   formData.append('file', file)
 
   try {
-    const response = await axios.post('/api/bookshelf/recognize', formData, {
+    const response = await api.post('/bookshelf/recognize', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
     recognizedBook.value = response.data
@@ -231,7 +231,7 @@ const addBook = async () => {
 
   adding.value = true
   try {
-    await axios.post('/api/bookshelf/books', {
+    await api.post('/bookshelf/books', {
       title: recognizedBook.value.title,
       author: recognizedBook.value.author,
       publisher: recognizedBook.value.publisher,
@@ -259,7 +259,13 @@ const addBook = async () => {
 .bookshelf {
   max-width: 1200px;
   margin: 0 auto;
-  padding: var(--space-lg);
+  padding: var(--space-md) var(--space-md) calc(var(--space-md) + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 768px) {
+  .bookshelf {
+    padding: var(--space-lg);
+  }
 }
 
 .page-header {
@@ -270,9 +276,15 @@ const addBook = async () => {
 }
 
 .page-title {
-  font-size: 28px;
+  font-size: 22px;
   font-weight: 600;
   color: var(--color-text-primary);
+}
+
+@media (min-width: 480px) {
+  .page-title {
+    font-size: 28px;
+  }
 }
 
 .shelf-container {
@@ -301,10 +313,12 @@ const addBook = async () => {
   overflow-x: auto;
   scroll-snap-type: x proximity;
   padding-bottom: var(--space-sm);
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
 }
 
 .shelf-group__track::-webkit-scrollbar {
-  height: 4px;
+  height: 3px;
 }
 
 .shelf-group__track::-webkit-scrollbar-track {
@@ -316,12 +330,33 @@ const addBook = async () => {
   border-radius: 2px;
 }
 
+@media (max-width: 479px) {
+  .shelf-group__track::-webkit-scrollbar {
+    display: none;
+  }
+  .shelf-group__track {
+    scrollbar-width: none;
+  }
+}
+
 .book-item {
   flex-shrink: 0;
-  width: 140px;
+  width: 120px;
   scroll-snap-align: start;
   cursor: pointer;
   transition: transform var(--transition-normal);
+}
+
+@media (min-width: 480px) {
+  .book-item {
+    width: 140px;
+  }
+}
+
+@media (min-width: 768px) {
+  .book-item {
+    width: 160px;
+  }
 }
 
 .book-item:hover {

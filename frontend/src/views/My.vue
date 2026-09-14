@@ -102,7 +102,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import axios from 'axios'
+import api from '../api/index'
 import { useCoverColor } from '../composables/useCoverColor'
 
 const { getCoverColor } = useCoverColor()
@@ -111,7 +111,7 @@ const books = ref([])
 
 const fetchStats = async () => {
   try {
-    const response = await axios.get('/api/bookshelf/statistics')
+    const response = await api.get('/bookshelf/statistics')
     stats.value = response.data
   } catch (error) {
     console.error('获取统计失败:', error)
@@ -120,7 +120,7 @@ const fetchStats = async () => {
 
 const fetchBooks = async () => {
   try {
-    const response = await axios.get('/api/bookshelf/books')
+    const response = await api.get('/bookshelf/books')
     books.value = response.data
   } catch (error) {
     console.error('获取书籍失败:', error)
@@ -144,7 +144,13 @@ const getPercentage = (value) => {
 .my-page {
   max-width: 800px;
   margin: 0 auto;
-  padding: var(--space-lg);
+  padding: var(--space-md) var(--space-md) calc(var(--space-md) + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 768px) {
+  .my-page {
+    padding: var(--space-lg);
+  }
 }
 
 .page-header {
@@ -152,9 +158,15 @@ const getPercentage = (value) => {
 }
 
 .page-title {
-  font-size: 28px;
+  font-size: 22px;
   font-weight: 600;
   color: var(--color-text-primary);
+}
+
+@media (min-width: 480px) {
+  .page-title {
+    font-size: 28px;
+  }
 }
 
 .section-title {
@@ -172,11 +184,18 @@ const getPercentage = (value) => {
 .stats-card {
   background: var(--color-bg-card);
   border-radius: var(--radius-lg);
-  padding: var(--space-lg);
+  padding: var(--space-md);
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: var(--space-md);
   box-shadow: var(--shadow-sm);
+}
+
+@media (min-width: 480px) {
+  .stats-card {
+    grid-template-columns: repeat(4, 1fr);
+    padding: var(--space-lg);
+  }
 }
 
 .stat-item {
@@ -184,10 +203,16 @@ const getPercentage = (value) => {
 }
 
 .stat-value {
-  font-size: 28px;
+  font-size: 22px;
   font-weight: 700;
   color: var(--color-primary);
   margin-bottom: var(--space-xs);
+}
+
+@media (min-width: 480px) {
+  .stat-value {
+    font-size: 28px;
+  }
 }
 
 .stat-value--success { color: var(--color-success); }
@@ -207,16 +232,28 @@ const getPercentage = (value) => {
 .shelf-age-card {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: var(--radius-lg);
-  padding: var(--space-lg);
+  padding: var(--space-md);
   display: flex;
   align-items: center;
   color: white;
+  gap: var(--space-md);
+}
+
+@media (min-width: 480px) {
+  .shelf-age-card {
+    padding: var(--space-lg);
+  }
 }
 
 .age-icon {
-  font-size: 48px;
-  margin-right: var(--space-lg);
+  font-size: 36px;
   flex-shrink: 0;
+}
+
+@media (min-width: 480px) {
+  .age-icon {
+    font-size: 48px;
+  }
 }
 
 .age-text {
@@ -226,9 +263,15 @@ const getPercentage = (value) => {
 }
 
 .age-value {
-  font-size: 32px;
+  font-size: 24px;
   font-weight: 700;
   margin-bottom: var(--space-sm);
+}
+
+@media (min-width: 480px) {
+  .age-value {
+    font-size: 32px;
+  }
 }
 
 .age-detail {
@@ -265,7 +308,8 @@ const getPercentage = (value) => {
 
 .distribution-legend {
   display: flex;
-  gap: var(--space-md);
+  flex-wrap: wrap;
+  gap: var(--space-sm) var(--space-md);
   font-size: 12px;
   color: var(--color-text-regular);
 }

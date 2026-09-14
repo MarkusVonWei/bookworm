@@ -36,11 +36,14 @@ body {
   background-color: var(--color-bg-page);
   color: var(--color-text-regular);
   -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior: none;
 }
 
 .app {
-  min-height: 100vh;
-  padding-bottom: 64px;
+  min-height: 100dvh;
+  padding-bottom: calc(64px + env(safe-area-inset-bottom));
 }
 
 .bottom-nav {
@@ -51,7 +54,7 @@ body {
   background: var(--color-bg-card);
   display: flex;
   justify-content: space-around;
-  padding: var(--space-sm) 0;
+  padding: var(--space-sm) 0 calc(var(--space-sm) + env(safe-area-inset-bottom));
   border-top: 1px solid var(--color-border);
   z-index: 100;
 }

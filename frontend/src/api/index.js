@@ -5,6 +5,40 @@ const api = axios.create({
   timeout: 60000
 })
 
+/**
+ * 请求拦截器: 自动附加 X-User-Id header
+ * 从 localStorage 读取 device_id, 由 useUser composable 在初始化时设置
+ */
+api.interceptors.request.use((config) => {
+  const deviceId = localStorage.getItem('bookworm_device_id')
+  if (deviceId) {
+    config.headers['X-User-Id'] = deviceId
+  }
+  return config
+})
+
+// ========== 用户API ==========
+
+// 初始化匿名用户
+export function initUser(deviceId) {
+  return api.post('/user/init', { device_id: deviceId })
+}
+
+// 注册 (匿名 → 正式)
+export function registerUser(data) {
+  return api.post('/user/register-with-device', data)
+}
+
+// 登录
+export function loginUser(data) {
+  return api.post('/user/login', data)
+}
+
+// 获取当前用户信息
+export function getMe() {
+  return api.get('/user/me')
+}
+
 // ========== 书架API ==========
 
 // 获取所有书籍
@@ -70,6 +104,13 @@ export function getAllRecords() {
 // 获取统计信息
 export function getStatistics() {
   return api.get('/bookshelf/statistics')
+}
+
+// ========== 时间线API ==========
+
+// 获取时间线 (状态里程碑 + 阅读记录)
+export function getTimeline() {
+  return api.get('/bookshelf/timeline')
 }
 
 // ========== 搜索API ==========

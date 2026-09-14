@@ -40,21 +40,36 @@ const sizeClass = computed(() => `modal--${props.size}`)
   inset: 0;
   background: var(--color-overlay);
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
   z-index: 1000;
   padding: var(--space-md);
 }
 
+@media (min-width: 480px) {
+  .modal-overlay {
+    align-items: center;
+  }
+}
+
 .modal {
   background: var(--color-bg-card);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   width: 100%;
-  max-height: 90vh;
+  max-height: 85vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   box-shadow: var(--shadow-xl);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@media (min-width: 480px) {
+  .modal {
+    border-radius: var(--radius-lg);
+    max-height: 90vh;
+    padding-bottom: 0;
+  }
 }
 
 .modal--sm { max-width: 400px; }
@@ -65,27 +80,33 @@ const sizeClass = computed(() => `modal--${props.size}`)
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--space-md) var(--space-lg);
-  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-md) var(--space-lg) var(--space-sm);
 }
 
 .modal-header h2 {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 600;
   color: var(--color-text-primary);
 }
 
 .modal-close {
-  background: none;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-hover);
   border: none;
-  font-size: 24px;
+  border-radius: var(--radius-full);
+  font-size: 18px;
   color: var(--color-text-secondary);
   cursor: pointer;
   line-height: 1;
-  transition: color var(--transition-fast);
+  transition: all var(--transition-fast);
 }
 
 .modal-close:hover {
+  background: var(--color-border);
   color: var(--color-text-primary);
 }
 
@@ -93,13 +114,13 @@ const sizeClass = computed(() => `modal--${props.size}`)
   flex: 1;
   overflow-y: auto;
   padding: var(--space-lg);
+  -webkit-overflow-scrolling: touch;
 }
 
 .modal-footer {
   display: flex;
   justify-content: flex-end;
   gap: var(--space-sm);
-  padding: var(--space-md) var(--space-lg);
-  border-top: 1px solid var(--color-border);
+  padding: var(--space-sm) var(--space-lg) var(--space-md);
 }
 </style>

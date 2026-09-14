@@ -12,7 +12,8 @@ from pydantic import BaseModel
 
 # 导入书架模块
 from ..bookshelf.api import router as bookshelf_router
-from ..database import init_db
+from ..bookshelf.migrate import migrate_db
+from ..database import init_db, SessionLocal
 
 # 配置日志
 logger = logging.getLogger("bookworm")
@@ -37,6 +38,13 @@ def create_app() -> FastAPI:
     
     # 初始化数据库
     init_db()
+
+    # 执行数据库迁移 (添加 user_id 字段等)
+    db = SessionLocal()
+    try:
+        migrate_db(db)
+    finally:
+        db.close()
     
     # 注册路由
     app.include_router(bookshelf_router)

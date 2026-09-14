@@ -1,0 +1,147 @@
+/* ============================================
+   全局组件样式 — 表单 / 按钮 / 工具类
+   在 main.js 中引入
+   ============================================ */
+
+/* ---- 表单控件 ---- */
+
+input[type="text"],
+input[type="number"],
+input[type="tel"],
+input[type="password"],
+textarea,
+select {
+  width: 100%;
+  height: var(--input-height);
+  padding: var(--input-padding);
+  border: var(--input-border);
+  border-radius: var(--input-radius);
+  font-size: var(--input-font-size);
+  font-family: inherit;
+  color: var(--color-text-primary);
+  background: var(--color-bg-card);
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+textarea {
+  height: auto;
+  min-height: 80px;
+  padding: var(--space-sm) var(--space-sm);
+  resize: vertical;
+  line-height: 1.6;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(64, 158, 255, 0.12);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-text-placeholder);
+}
+
+/* ---- 表单布局 ---- */
+
+.form-group {
+  margin-bottom: var(--space-md);
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+.form-label {
+  display: block;
+  font-size: var(--label-font-size);
+  font-weight: 500;
+  color: var(--label-color);
+  margin-bottom: var(--space-xs);
+}
+
+/* ---- 按钮 ---- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--btn-height);
+  padding: var(--btn-padding);
+  border: 1px solid transparent;
+  border-radius: var(--btn-radius);
+  font-size: var(--btn-font-size);
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn--primary {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+}
+
+.btn--secondary {
+  background: var(--color-bg-card);
+  color: var(--color-text-regular);
+  border-color: var(--color-border);
+}
+
+.btn--secondary:hover:not(:disabled) {
+  color: var(--color-text-primary);
+  border-color: var(--color-text-secondary);
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--color-primary);
+  border-color: transparent;
+  padding: 0;
+  height: auto;
+}
+
+.btn--ghost:hover {
+  color: var(--color-primary-hover);
+}
+
+.btn--danger-ghost {
+  background: transparent;
+  color: var(--color-danger);
+  border-color: transparent;
+  padding: 0;
+  height: auto;
+}
+
+.btn--danger-ghost:hover {
+  opacity: 0.8;
+}
+
+.btn--sm {
+  height: 32px;
+  padding: 0 var(--space-sm);
+  font-size: 13px;
+}
