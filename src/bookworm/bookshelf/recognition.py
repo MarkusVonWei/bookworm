@@ -53,7 +53,7 @@ async def recognize_book_from_image(image_path: str) -> Dict[str, Any]:
 - 如果某个字段无法识别，请返回null
 - 只返回JSON，不要其他内容"""
 
-    async with httpx.AsyncClient(timeout=30.0) as client:
+    async with httpx.AsyncClient(timeout=10.0) as client:
         try:
             response = await client.post(
                 f"{MIMO_API_BASE}/chat/completions",
