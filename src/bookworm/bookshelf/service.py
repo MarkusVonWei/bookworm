@@ -7,6 +7,9 @@ from sqlalchemy import func
 
 from .models import Book, ReadingRecord, ReadingStatus, User
 
+# 配置常量
+MAX_BOOKS_PER_USER = 60  # 单个用户最多上传60本书
+
 
 class BookshelfService:
     """书架服务"""
@@ -37,8 +40,18 @@ class BookshelfService:
 
     def add_book(self, book_data: Dict[str, Any]) -> Book:
         """添加书籍"""
+        user_id = book_data["user_id"]
+
+        # 检查用户书籍数量限制
+        current_count = self.db.query(func.count(Book.id))\
+            .filter(Book.user_id == user_id)\
+            .scalar()
+
+        if current_count >= MAX_BOOKS_PER_USER:
+            raise ValueError(f"每个用户最多只能上传 {MAX_BOOKS_PER_USER} 本书，已达上限")
+
         book = Book(
-            user_id=book_data["user_id"],
+            user_id=user_id,
             title=book_data["title"],
             author=book_data.get("author"),
             publisher=book_data.get("publisher"),

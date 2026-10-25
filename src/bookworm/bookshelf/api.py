@@ -3,8 +3,9 @@
 import os
 import uuid
 from typing import List, Optional, Dict, Any
+import asyncio
 from fastapi import APIRouter, Depends, HTTPException, Header, UploadFile, File
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from sqlalchemy.orm import Session
 from datetime import datetime
 from pathlib import Path
@@ -178,6 +179,16 @@ class ReadingRecordCreate(BaseModel):
     page_number: Optional[int] = None
     tags: Optional[str] = None
 
+    @field_validator("page_number", mode="before")
+    @classmethod
+    def coerce_page_number(cls, v):
+        if v == "" or v is None:
+            return None
+        try:
+            return int(v)
+        except (ValueError, TypeError):
+            return None
+
 
 class BookResponse(BaseModel):
     """书籍响应"""
@@ -293,7 +304,10 @@ def create_book(
     book_dict["user_status"] = status
     book_dict["user_id"] = user.user_id
 
-    book = service.add_book(book_dict)
+    try:
+        book = service.add_book(book_dict)
+    except ValueError as e:
+        raise HTTPException(status_code=403, detail=str(e))
 
     book_dict = BookResponse.model_validate(book)
     book_dict.records_count = 0
@@ -434,6 +448,18 @@ def search_books(
     return result
 
 
+@router.get("/bookshelf/search-external")
+async def search_books_external(
+    keyword: str,
+    limit: int = 10,
+    user: User = Depends(get_current_user),
+):
+    """搜索外部书籍目录（豆瓣）用于添加新书"""
+    from .recognition import search_books_external as _search
+    results = await _search(keyword, limit)
+    return results
+
+
 @router.get("/bookshelf/timeline")
 def get_timeline(
     user: User = Depends(get_current_user),
@@ -476,10 +502,10 @@ async def recognize_book(file: UploadFile = File(...)):
 
     上传书籍封面图片，使用VL大模型识别书籍信息
     """
-    if not file.content_type.startswith("image/"):
+    if not (file.content_type or "").startswith("image/"):
         raise HTTPException(status_code=400, detail="请上传图片文件")
 
-    file_ext = Path(file.filename).suffix or ".jpg"
+    file_ext = Path(file.filename or "").suffix or ".jpg"
     file_name = f"{uuid.uuid4()}{file_ext}"
     file_path = UPLOAD_DIR / file_name
 
@@ -493,14 +519,30 @@ async def recognize_book(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=recognition_result["error"])
 
     metadata = None
-    if recognition_result.get("isbn"):
-        metadata = await fetch_book_metadata(isbn=recognition_result["isbn"])
+    try:
+        # metadata 获取失败时快速返回 VLM 结果
+        if recognition_result.get("isbn"):
+            metadata = await asyncio.wait_for(
+                fetch_book_metadata(isbn=recognition_result["isbn"]),
+                timeout=8.0
+            )
+        if not metadata and recognition_result.get("title"):
+            metadata = await asyncio.wait_for(
+                fetch_book_metadata(
+                    title=recognition_result["title"],
+                    author=recognition_result.get("author")
+                ),
+                timeout=8.0
+            )
+    except (asyncio.TimeoutError, Exception) as e:
+        logger.warning(f"[识别] metadata获取失败/超时: {e}, 使用VLM结果")
 
-    if not metadata and recognition_result.get("title"):
-        metadata = await fetch_book_metadata(
-            title=recognition_result["title"],
-            author=recognition_result.get("author")
-        )
+    # 完善 image_url 字段
+    result = {**recognition_result}
+    if metadata:
+        for key in ["title", "author", "publisher", "publish_date", "isbn", "cover_image", "description", "category"]:
+            if metadata.get(key) and (not result.get(key) or len(str(metadata[key])) > len(str(result.get(key, "")))):
+                result[key] = metadata[key]
 
     result = {**recognition_result}
     if metadata:

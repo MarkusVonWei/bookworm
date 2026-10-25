@@ -14,6 +14,7 @@ from pydantic import BaseModel
 from ..bookshelf.api import router as bookshelf_router
 from ..bookshelf.migrate import migrate_db
 from ..database import init_db, SessionLocal
+from .rate_limit import RateLimitMiddleware
 
 # 配置日志
 logger = logging.getLogger("bookworm")
@@ -25,6 +26,16 @@ def create_app() -> FastAPI:
         title="我的书架",
         description="个人阅读管理 - 数字书架",
         version="1.0.0"
+    )
+    
+    # 添加限流中间件 (必须在CORS之前添加)
+    app.add_middleware(
+        RateLimitMiddleware,
+        default_limit=100,   # 默认：10秒100次请求
+        default_window=10,
+        upload_limit=10,     # 识别/添加书籍：60秒10次
+        upload_window=60,
+        trusted_proxies=["127.0.0.1", "::1"]  # 信任 Nginx 代理
     )
     
     # 添加CORS中间件
