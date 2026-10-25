@@ -4,8 +4,8 @@
  */
 
 const COVER_COLORS = [
-  '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4',
-  '#ffeaa7', '#dfe6e9', '#fd79a8', '#a29bfe',
+  '#8B7355', '#6B8E9B', '#D4A574', '#B8A88A',
+  '#5B8C5A', '#9B8B7A', '#7A9B8B', '#A59B8B',
 ]
 
 export function useCoverColor() {

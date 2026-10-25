@@ -1,16 +1,24 @@
 <template>
   <div class="records-page">
-    <header class="page-header">
-      <h1 class="page-title">阅读记录</h1>
+    <!-- 顶部导航 -->
+    <header class="top-bar">
+      <DogEarLogo :show-text="true" />
     </header>
 
-    <EmptyState
-      v-if="timeline.length === 0"
-      icon="📝"
-      title="还没有阅读记录"
-      description="去书架添加一本书，开始记录吧"
-    />
+    <!-- 标题 -->
+    <div class="page-title-section">
+      <h1 class="page-title">阅读记录</h1>
+      <p class="page-title-en">Reading Timeline.</p>
+    </div>
 
+    <!-- 空状态 -->
+    <div v-if="timeline.length === 0" class="empty-state">
+      <div class="empty-icon">📝</div>
+      <p class="empty-title">还没有阅读记录</p>
+      <p class="empty-hint">去书架添加一本书，开始记录吧</p>
+    </div>
+
+    <!-- 时间线 -->
     <div v-else class="timeline">
       <div v-for="(group, date) in groupedTimeline" :key="date" class="date-group">
         <div class="date-header">{{ date }}</div>
@@ -62,7 +70,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../api/index'
 import { formatDate, formatTime } from '../utils/date'
-import EmptyState from '../components/EmptyState.vue'
+import DogEarLogo from '../components/DogEarLogo.vue'
 
 const router = useRouter()
 const timeline = ref([])
@@ -76,9 +84,7 @@ const fetchTimeline = async () => {
   }
 }
 
-onMounted(() => {
-  fetchTimeline()
-})
+onMounted(() => { fetchTimeline() })
 
 const groupedTimeline = computed(() => {
   const groups = {}
@@ -105,42 +111,71 @@ const milestoneLabel = (milestone) => {
   return labels[milestone] || milestone
 }
 
-const goToBook = (bookId) => {
-  router.push(`/book/${bookId}`)
-}
+const goToBook = (bookId) => { router.push(`/book/${bookId}`) }
 </script>
 
 <style scoped>
 .records-page {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: var(--space-md) var(--space-md) calc(var(--space-md) + env(safe-area-inset-bottom));
+  min-height: 100dvh;
+  background: var(--color-bg-page);
+  padding: var(--space-md);
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
 }
 
-@media (min-width: 768px) {
-  .records-page {
-    padding: var(--space-lg);
-  }
+/* ---- 顶部导航 ---- */
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-sm) 0 var(--space-md);
 }
 
-.page-header {
+/* ---- 页面标题 ---- */
+.page-title-section {
   margin-bottom: var(--space-xl);
 }
 
 .page-title {
-  font-size: 22px;
-  font-weight: 600;
+  font-size: 24px;
+  font-weight: 700;
   color: var(--color-text-primary);
+  margin-bottom: var(--space-xs);
 }
 
-@media (min-width: 480px) {
-  .page-title {
-    font-size: 28px;
-  }
+.page-title-en {
+  font-family: var(--font-handwriting);
+  font-size: 14px;
+  color: var(--color-text-muted);
+}
+
+/* ---- 空状态 ---- */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2xl) var(--space-md);
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: var(--space-md);
+}
+
+.empty-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-sm);
+}
+
+.empty-hint {
+  font-size: 14px;
+  color: var(--color-text-muted);
 }
 
 /* ---- 时间线布局 ---- */
-
 .timeline {
   display: flex;
   flex-direction: column;
@@ -152,12 +187,12 @@ const goToBook = (bookId) => {
 }
 
 .date-header {
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
   color: var(--color-text-secondary);
   margin-bottom: var(--space-md);
   padding-bottom: var(--space-sm);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border-light);
 }
 
 .date-items {
@@ -166,27 +201,26 @@ const goToBook = (bookId) => {
   gap: var(--space-sm);
 }
 
-/* ---- 状态里程碑卡片 ---- */
-
+/* ---- 里程碑卡片 ---- */
 .milestone-card {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
-  padding: var(--space-sm) var(--space-md);
+  gap: var(--space-md);
+  padding: var(--space-md);
   border-radius: var(--radius-md);
   background: var(--color-bg-card);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-card);
   cursor: pointer;
-  transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+  transition: all var(--transition-fast);
 }
 
 .milestone-card:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
+  box-shadow: var(--shadow-float);
+  transform: translateX(4px);
 }
 
 .milestone-card--added {
-  border-left: 3px solid var(--color-text-secondary);
+  border-left: 3px solid var(--color-text-muted);
 }
 
 .milestone-card--started {
@@ -194,11 +228,11 @@ const goToBook = (bookId) => {
 }
 
 .milestone-card--finished {
-  border-left: 3px solid var(--color-success);
+  border-left: 3px solid var(--color-finished);
 }
 
 .milestone-icon {
-  font-size: 18px;
+  font-size: 20px;
   flex-shrink: 0;
 }
 
@@ -218,33 +252,28 @@ const goToBook = (bookId) => {
 }
 
 .milestone-text strong {
-  font-weight: 500;
+  font-weight: 600;
+  color: var(--color-text-secondary);
 }
 
 .milestone-time {
   font-size: 12px;
-  color: var(--color-text-placeholder);
+  color: var(--color-text-muted);
 }
 
 /* ---- 阅读记录卡片 ---- */
-
 .record-card {
   background: var(--color-bg-card);
   padding: var(--space-md);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-card);
   cursor: pointer;
-  transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+  transition: all var(--transition-fast);
 }
 
 .record-card:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
-}
-
-.record-card:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
+  box-shadow: var(--shadow-float);
+  transform: translateY(-2px);
 }
 
 .record-book {
@@ -252,8 +281,8 @@ const goToBook = (bookId) => {
 }
 
 .book-link {
-  font-size: 16px;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 600;
   color: var(--color-primary);
 }
 
@@ -266,7 +295,7 @@ const goToBook = (bookId) => {
 
 .record-excerpt {
   font-size: 14px;
-  color: var(--color-text-regular);
+  color: var(--color-text-secondary);
   font-style: italic;
   padding-left: var(--space-md);
   border-left: 3px solid var(--color-primary);
@@ -274,16 +303,18 @@ const goToBook = (bookId) => {
 }
 
 .record-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
   margin-top: var(--space-sm);
 }
 
 .tag {
   display: inline-block;
-  background: var(--color-bg-hover);
+  background: var(--color-bg-warm);
   padding: var(--space-xs) var(--space-sm);
   border-radius: var(--radius-sm);
   font-size: 12px;
   color: var(--color-text-secondary);
-  margin-right: var(--space-sm);
 }
 </style>
