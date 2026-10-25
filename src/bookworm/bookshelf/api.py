@@ -513,20 +513,25 @@ async def recognize_book(file: UploadFile = File(...)):
         content = await file.read()
         buffer.write(content)
 
+    # 步骤1: 识别（优先条形码，备选 VLM）
     recognition_result = await recognize_book_from_image(str(file_path))
 
     if "error" in recognition_result:
         raise HTTPException(status_code=500, detail=recognition_result["error"])
 
+    logger.info(f"[识别] 识别结果: source={recognition_result.get('source', 'vlm')}, isbn={recognition_result.get('isbn')}, title={recognition_result.get('title')}")
+
+    # 步骤2: 查询元数据（使用 ISBN 优先，标题备选）
     metadata = None
     try:
-        # metadata 获取失败时快速返回 VLM 结果
         if recognition_result.get("isbn"):
+            logger.info(f"[识别] 使用 ISBN 查询元数据: {recognition_result['isbn']}")
             metadata = await asyncio.wait_for(
                 fetch_book_metadata(isbn=recognition_result["isbn"]),
                 timeout=8.0
             )
         if not metadata and recognition_result.get("title"):
+            logger.info(f"[识别] 使用标题查询元数据: {recognition_result['title']}")
             metadata = await asyncio.wait_for(
                 fetch_book_metadata(
                     title=recognition_result["title"],
@@ -535,21 +540,22 @@ async def recognize_book(file: UploadFile = File(...)):
                 timeout=8.0
             )
     except (asyncio.TimeoutError, Exception) as e:
-        logger.warning(f"[识别] metadata获取失败/超时: {e}, 使用VLM结果")
+        logger.warning(f"[识别] metadata获取失败/超时: {e}, 使用识别结果")
 
-    # 完善 image_url 字段
+    # 步骤2.5: 如果条形码识别到 ISBN，确保返回
+    if recognition_result.get("source") == "barcode" and recognition_result.get("isbn"):
+        logger.info(f"[识别] 条形码识别到 ISBN: {recognition_result['isbn']}, 即使无元数据也返回")
+
+    # 步骤3: 合并结果（元数据补充识别结果）
     result = {**recognition_result}
     if metadata:
         for key in ["title", "author", "publisher", "publish_date", "isbn", "cover_image", "description", "category"]:
             if metadata.get(key) and (not result.get(key) or len(str(metadata[key])) > len(str(result.get(key, "")))):
                 result[key] = metadata[key]
 
-    result = {**recognition_result}
-    if metadata:
-        for key in ["title", "author", "publisher", "publish_date", "isbn", "cover_image", "description", "category"]:
-            if metadata.get(key) and (not result.get(key) or len(str(metadata[key])) > len(str(result.get(key, "")))):
-                result[key] = metadata[key]
-
+    # 步骤4: 添加图片 URL
     result["image_url"] = f"/data/uploads/{file_name}"
+
+    logger.info(f"[识别] 最终结果: title={result.get('title')}, author={result.get('author')}, isbn={result.get('isbn')}")
 
     return result

@@ -40,6 +40,20 @@ async def recognize_book_from_image(image_path: str) -> Dict[str, Any]:
     start_time = time.time()
     logger.info(f"[VLM] 开始识别: {image_path}")
 
+    # 步骤0: 尝试条形码识别（快速，优先使用）
+    barcode_result = _try_barcode_recognition(image_path)
+    if barcode_result and barcode_result.get("isbn"):
+        logger.info(f"[条形码] 识别到 ISBN: {barcode_result['isbn']}, 使用条形码结果")
+        return {
+            "title": None,
+            "author": None,
+            "isbn": barcode_result["isbn"],
+            "publisher": None,
+            "publish_date": None,
+            "source": "barcode",
+            "barcode_type": barcode_result.get("barcode_type"),
+        }
+
     # 读取图片
     try:
         with open(image_path, "rb") as f:
@@ -199,6 +213,71 @@ async def _fetch_from_douban_suggest(title: str) -> Optional[Dict[str, Any]]:
             return None
 
 
+
+
+async def _fetch_from_douban_isbn(isbn: str) -> Optional[Dict[str, Any]]:
+    """
+    通过 ISBN 搜索豆瓣图书
+    
+    使用豆瓣 search API
+    """
+    start_time = time.time()
+    logger.info(f"[豆瓣] ISBN搜索: {isbn}")
+    
+    async with httpx.AsyncClient(timeout=5.0, headers=_DOUBAN_HEADERS) as client:
+        try:
+            # 豆瓣搜索 API
+            response = await client.get(
+                "https://book.douban.com/j/subject_suggest",
+                params={"q": isbn}
+            )
+            
+            elapsed = time.time() - start_time
+            logger.info(f"[豆瓣] ISBN搜索响应: status={response.status_code}, 耗时={elapsed:.2f}s")
+            
+            if response.status_code != 200:
+                return None
+            
+            data = response.json()
+            if not data:
+                logger.info(f"[豆瓣] ISBN搜索无结果: {isbn}")
+                return None
+            
+            # 查找匹配的 ISBN
+            for item in data:
+                # 检查是否包含 ISBN
+                if item.get("isbn") == isbn or isbn in str(item.get("title", "")):
+                    result = {
+                        "title": item.get("title"),
+                        "author": item.get("author_name"),
+                        "cover_image": item.get("pic"),
+                        "publish_date": item.get("year"),
+                        "douban_id": item.get("id"),
+                        "douban_url": item.get("url"),
+                        "isbn": isbn,
+                    }
+                    logger.info(f"[豆瓣] ISBN找到: {result['title']}")
+                    return result
+            
+            # 如果没有精确匹配，返回第一个结果
+            item = data[0]
+            result = {
+                "title": item.get("title"),
+                "author": item.get("author_name"),
+                "cover_image": item.get("pic"),
+                "publish_date": item.get("year"),
+                "douban_id": item.get("id"),
+                "douban_url": item.get("url"),
+                "isbn": isbn,
+            }
+            logger.info(f"[豆瓣] ISBN返回第一个结果: {result['title']}")
+            return result
+            
+        except Exception as e:
+            elapsed = time.time() - start_time
+            logger.warning(f"[豆瓣] ISBN搜索失败: {e}, 耗时={elapsed:.2f}s")
+            return None
+
 # ───────────────────────────────────────────
 # Step 3: 豆瓣图书页面解析
 # ───────────────────────────────────────────
@@ -347,8 +426,8 @@ async def fetch_book_metadata(isbn: str = None, title: str = None, author: str =
     获取书籍元数据
 
     优先级:
-    1. ISBN 查询 (豆瓣 suggest → 豆瓣页面 → Open Library)
-    2. 标题搜索 (豆瓣 suggest → 豆瓣页面 → Open Library)
+    1. ISBN 查询 (Open Library → 豆瓣 suggest)
+    2. 标题搜索 (豆瓣 suggest → Open Library)
     """
     start_time = time.time()
     logger.info(f"[元数据] 开始查询: isbn={isbn}, title={title}, author={author}")
@@ -356,6 +435,26 @@ async def fetch_book_metadata(isbn: str = None, title: str = None, author: str =
     # ── ISBN 查询 ──
     if isbn:
         logger.info(f"[元数据] 尝试ISBN查询: {isbn}")
+        
+        # 优先豆瓣 ISBN 搜索
+        result = await _fetch_from_douban_isbn(isbn)
+        if result:
+            result["isbn"] = isbn
+            elapsed = time.time() - start_time
+            logger.info(f"[元数据] 豆瓣ISBN找到, 耗时={elapsed:.2f}s")
+            return result
+
+        # 备选: Open Library
+        logger.info(f"[元数据] 豆瓣ISBN未找到, 尝试OpenLibrary")
+        result = await _fetch_from_open_library(isbn=isbn)
+        if result:
+            result["isbn"] = isbn
+            elapsed = time.time() - start_time
+            logger.info(f"[元数据] OpenLibrary找到, 耗时={elapsed:.2f}s")
+            return result
+
+        # 最后尝试: 豆瓣 suggest
+        logger.info(f"[元数据] OpenLibrary未找到, 尝试豆瓣suggest")
         result = await _fetch_from_douban_suggest(isbn)
         if result and result.get("douban_id"):
             logger.info(f"[元数据] 豆瓣suggest找到, 获取详细信息")
@@ -365,13 +464,6 @@ async def fetch_book_metadata(isbn: str = None, title: str = None, author: str =
             result["isbn"] = isbn
             elapsed = time.time() - start_time
             logger.info(f"[元数据] ISBN查询完成, 耗时={elapsed:.2f}s")
-            return result
-
-        logger.info(f"[元数据] 豆瓣suggest未找到, 尝试OpenLibrary")
-        result = await _fetch_from_open_library(isbn=isbn)
-        if result:
-            elapsed = time.time() - start_time
-            logger.info(f"[元数据] OpenLibrary找到, 耗时={elapsed:.2f}s")
             return result
 
     # ── 标题搜索 ──
@@ -445,3 +537,19 @@ async def search_books_external(keyword: str, limit: int = 10) -> list:
             elapsed = time.time() - start_time
             logger.warning(f"[外部搜索] 调用失败: {e}, 耗时 {elapsed:.2f}s")
             return []
+
+
+def _try_barcode_recognition(image_path: str) -> Optional[Dict[str, Any]]:
+    """尝试条形码识别"""
+    try:
+        from .barcode import recognize_barcode
+        result = recognize_barcode(image_path)
+        if result and result.get("isbn"):
+            logger.info(f"[条形码] 识别成功: ISBN={result['isbn']}")
+            return result
+        elif result:
+            logger.info(f"[条形码] 识别到条形码但无有效 ISBN: {result.get('barcode_data')}")
+        return result
+    except Exception as e:
+        logger.debug(f"[条形码] 识别失败: {e}")
+        return None

@@ -31,7 +31,13 @@
       <!-- 识别中 -->
       <view v-if="recognizing" class="recognizing">
         <view class="spinner"></view>
-        <text>正在识别书籍信息...</text>
+        <text>{{ recognizingText }}</text>
+      </view>
+
+      <!-- 条形码识别成功提示 -->
+      <view v-if="barcodeResult && !recognizing" class="barcode-hint">
+        <text class="barcode-icon">📊</text>
+        <text class="barcode-text">条形码识别成功: {{ barcodeResult }}</text>
       </view>
     </view>
 
@@ -146,6 +152,8 @@ const methods = [
 ]
 
 const recognizing = ref(false)
+const recognizingText = ref('正在识别书籍信息...')
+const barcodeResult = ref('')
 const tempFilePath = ref('')
 const searchText = ref('')
 const searchResults = ref([])
@@ -180,8 +188,21 @@ function chooseImage(sourceType) {
 
 async function recognizeBook(filePath) {
   recognizing.value = true
+  recognizingText.value = '正在识别条形码...'
+  barcodeResult.value = ''
+  
   try {
     const result = await api.recognizeBook(filePath)
+    
+    // 显示识别来源
+    if (result.source === 'barcode') {
+      recognizingText.value = '条形码识别成功，正在查询图书信息...'
+      barcodeResult.value = result.isbn || result.barcode_data || ''
+    } else {
+      recognizingText.value = 'AI 识别成功，正在完善信息...'
+    }
+    
+    // 填充表单
     title.value = result.title || ''
     author.value = result.author || ''
     publisher.value = result.publisher || ''
@@ -190,12 +211,19 @@ async function recognizeBook(filePath) {
     description.value = result.description || ''
     category.value = result.category || ''
     coverImage.value = resolveImageUrl(result.cover_image || result.image_url || '')
-    toast.success('识别成功')
+    
+    // 显示成功提示
+    if (result.source === 'barcode') {
+      toast.success(`条形码识别成功: ${result.isbn}`)
+    } else {
+      toast.success('识别成功')
+    }
   } catch (err) {
     console.error('识别失败:', err)
     toast.error(err.message || '识别失败，请手动输入')
   } finally {
     recognizing.value = false
+    recognizingText.value = '正在识别书籍信息...'
   }
 }
 
@@ -357,6 +385,27 @@ async function addBook() {
   align-items: center;
   padding: 16px;
   color: var(--color-text-secondary);
+}
+
+/* 条形码识别提示 */
+.barcode-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #E8F5E9;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.barcode-icon {
+  font-size: 18px;
+}
+
+.barcode-text {
+  font-size: 13px;
+  color: #2E7D32;
+  font-weight: 500;
 }
 
 /* 搜索 */
