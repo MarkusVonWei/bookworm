@@ -109,3 +109,7 @@ shelf_refer.png
 dogear.jpg
 wechat-miniprogram/config
 miniprogram-scripts/
+
+# Build outputs (generated code)
+miniprogram/common/vendor.js
+miniprogram/common/vendor.js.map

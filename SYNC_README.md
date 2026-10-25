@@ -5,10 +5,10 @@
 | 项目 | 值 |
 |------|-----|
 | 主机名 | book |
-| IP | 124.220.45.149 |
+| IP | 124.xxx.xxx.xxx |
 | 用户 | ubuntu |
 | 部署路径 | ~/workspace/bookshelf |
-| SSH 配置 | `~/.ssh/config` 中的 `Host book` |
+| SSH 配置 | `~/.ssh/config` 中的 `Host <server>` |
 
 ## 同步脚本
 
@@ -39,7 +39,7 @@ cd /Users/marvin/workspace/life_project/bookworm
 
 ### 1. SSH 连接
 ```bash
-ssh book
+ssh <server>
 ```
 
 ### 2. 进入项目目录
@@ -101,14 +101,14 @@ curl http://localhost:8000/health
 ./sync_to_server.sh
 
 # SSH 到服务器
-ssh book
+ssh <server>
 
 # 查看服务状态
-ssh book "curl -s http://localhost:8000/health"
+ssh <server> "curl -s http://localhost:8000/health"
 
 # 重启服务
-ssh book "cd ~/workspace/bookshelf && pkill -f 'python main.py'; nohup python main.py > logs/app.log 2>&1 &"
+ssh <server> "cd ~/workspace/bookshelf && pkill -f 'python main.py'; nohup python main.py > logs/app.log 2>&1 &"
 
 # 查看日志
-ssh book "tail -f ~/workspace/bookshelf/logs/app.log"
+ssh <server> "tail -f ~/workspace/bookshelf/logs/app.log"
 ```

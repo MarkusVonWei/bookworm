@@ -3,7 +3,7 @@
 ## 服务器信息
 
 - **主机名**: book
-- **IP**: 124.220.45.149
+- **IP**: 124.xxx.xxx.xxx
 - **用户**: ubuntu
 - **部署路径**: ~/workspace/bookshelf
 
@@ -30,7 +30,7 @@ cd /Users/marvin/workspace/life_project/bookworm
 
 ### 2. SSH 到服务器
 ```bash
-ssh book
+ssh <server>
 cd ~/workspace/bookshelf
 ```
 
@@ -78,7 +78,7 @@ make run
 curl http://localhost:8000/health
 
 # 或者
-curl http://124.220.45.149:8000/health
+curl http://124.xxx.xxx.xxx:8000/health
 ```
 
 ## 安全配置
@@ -171,5 +171,5 @@ pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 ```bash
 # 一键部署（同步 + 重启服务）
-ssh book "cd ~/workspace/bookshelf && pkill -f 'python main.py' || true && source venv/bin/activate && nohup python main.py > logs/app.log 2>&1 &"
+ssh <server> "cd ~/workspace/bookshelf && pkill -f 'python main.py' || true && source venv/bin/activate && nohup python main.py > logs/app.log 2>&1 &"
 ```

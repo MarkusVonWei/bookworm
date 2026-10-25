@@ -213,8 +213,8 @@ bookworm/
 | 项目 | 值 |
 |------|-----|
 | 后端 | `https://www.bookworm.icu` |
-| 服务器 | 124.220.45.149 (ubuntu) |
+| 服务器 | 124.xxx.xxx.xxx (ubuntu) |
 | 路径 | `~/workspace/bookshelf` |
 | 启动 | `bash run.sh` |
-| 小程序 AppID | `wx102d18424fb612c2` |
+| 小程序 AppID | `wx***********c2` |
 | 小程序导入 | `uniapp/dist/build/mp-weixin` |
