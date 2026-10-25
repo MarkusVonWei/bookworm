@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="我的书架 dog-ear — 把读过的，变成看得见的自己。智能阅读管理应用。">
+  <title>我的书架 dog-ear — 把读过的，变成看得见的自己</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+      background: #F5F0E8;
+      color: #1A1A1A;
+      line-height: 1.6;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    /* ===== Nav ===== */
+    .nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(245, 240, 232, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid #E8DFD0;
+    }
+    .nav-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 24px;
+    }
+    .logo {
+      font-size: 20px; font-weight: 700; color: #1A1A1A;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .logo-icon {
+      width: 32px; height: 32px; background: #8B7355; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      color: #FFFEF9; font-size: 16px;
+    }
+    .nav-links { display: flex; gap: 24px; align-items: center; }
+    .nav-links a {
+      font-size: 14px; color: #6B6560; transition: color 0.2s;
+    }
+    .nav-links a:hover { color: #1A1A1A; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 10px 24px; border-radius: 999px; font-size: 14px; font-weight: 500;
+      border: none; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-primary { background: #8B7355; color: #FFFEF9; }
+    .btn-primary:hover { background: #7A6548; }
+    .btn-ghost { background: transparent; color: #1A1A1A; border: 1.5px solid #D4C9B8; }
+    .btn-ghost:hover { border-color: #8B7355; }
+
+    /* ===== Hero ===== */
+    .hero {
+      padding: 140px 24px 80px;
+      text-align: center;
+      max-width: 800px; margin: 0 auto;
+    }
+    .hero-badge {
+      display: inline-block; padding: 4px 14px; border-radius: 999px;
+      background: #EDE4D3; color: #8B7355; font-size: 13px; margin-bottom: 20px;
+    }
+    .hero h1 {
+      font-size: clamp(32px, 5vw, 52px); font-weight: 700;
+      line-height: 1.25; margin-bottom: 18px; color: #1A1A1A;
+    }
+    .hero h1 em {
+      font-style: normal; color: #8B7355;
+      background: linear-gradient(transparent 65%, #EDE4D3 65%);
+    }
+    .hero p {
+      font-size: 17px; color: #6B6560; max-width: 560px; margin: 0 auto 32px;
+      line-height: 1.8;
+    }
+    .hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+    /* ===== Features ===== */
+    .features {
+      max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px;
+    }
+    .features-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+    }
+    .feature-card {
+      background: #FFFEF9; border-radius: 16px; padding: 28px 24px;
+      box-shadow: 0 2px 8px rgba(139, 115, 85, 0.08);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .feature-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(139, 115, 85, 0.12);
+    }
+    .feature-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; margin-bottom: 16px;
+    }
+    .feature-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+    .feature-card p { font-size: 13px; color: #6B6560; line-height: 1.7; }
+
+    /* ===== Screenshots ===== */
+    .showcase {
+      background: #EDE4D3;
+      padding: 80px 24px;
+    }
+    .showcase-inner { max-width: 1100px; margin: 0 auto; }
+    .section-label {
+      text-align: center; margin-bottom: 48px;
+    }
+    .section-label h2 {
+      font-size: 28px; font-weight: 700; margin-bottom: 10px;
+    }
+    .section-label p { font-size: 15px; color: #6B6560; }
+
+    .screenshot-hero {
+      max-width: 800px; margin: 0 auto 48px;
+      border-radius: 16px; overflow: hidden;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+      border: 3px solid #FFFEF9;
+    }
+    .screenshot-hero img {
+      width: 100%; display: block;
+    }
+
+    .screenshot-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .screenshot-item {
+      background: #FFFEF9; border-radius: 14px; overflow: hidden;
+      box-shadow: 0 4px 16px rgba(139, 115, 85, 0.1);
+      transition: transform 0.2s;
+    }
+    .screenshot-item:hover { transform: translateY(-4px); }
+    .screenshot-item img {
+      width: 100%; display: block;
+    }
+    .screenshot-caption {
+      padding: 12px 16px;
+      text-align: center;
+    }
+    .screenshot-caption span {
+      font-size: 13px; font-weight: 600; color: #1A1A1A;
+    }
+    .screenshot-caption small {
+      display: block; font-size: 11px; color: #8B7355; margin-top: 2px;
+    }
+
+    /* ===== Demo video ===== */
+    .demo-section {
+      max-width: 800px; margin: 0 auto; padding: 60px 24px;
+    }
+    .demo-section h2 {
+      text-align: center; font-size: 28px; font-weight: 700; margin-bottom: 12px;
+    }
+    .demo-section > p {
+      text-align: center; font-size: 15px; color: #6B6560; margin-bottom: 32px;
+    }
+    .video-wrapper {
+      border-radius: 16px; overflow: hidden;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    }
+    .video-wrapper video {
+      width: 100%; display: block; border-radius: 16px;
+    }
+
+    /* ===== CTA ===== */
+    .cta {
+      text-align: center; padding: 60px 24px 80px;
+    }
+    .cta-card {
+      max-width: 600px; margin: 0 auto;
+      background: #FFFEF9; border-radius: 20px; padding: 48px 32px;
+      box-shadow: 0 4px 20px rgba(139, 115, 85, 0.1);
+    }
+    .cta-card h2 { font-size: 24px; font-weight: 700; margin-bottom: 10px; }
+    .cta-card p { font-size: 15px; color: #6B6560; margin-bottom: 28px; }
+    .cta-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+    /* ===== Footer ===== */
+    .footer {
+      background: #1A1A1A; color: #B8A88A;
+      padding: 40px 24px 24px;
+    }
+    .footer-inner {
+      max-width: 1100px; margin: 0 auto;
+    }
+    .footer-top {
+      display: flex; justify-content: space-between; flex-wrap: wrap; gap: 32px;
+      margin-bottom: 32px;
+    }
+    .footer-brand h3 {
+      font-size: 18px; color: #FFFEF9; margin-bottom: 8px;
+    }
+    .footer-brand p {
+      font-size: 13px; color: #8B7355; max-width: 280px; line-height: 1.7;
+    }
+    .footer-links h4 {
+      font-size: 13px; color: #FFFEF9; margin-bottom: 12px; font-weight: 600;
+    }
+    .footer-links a {
+      display: block; font-size: 13px; color: #B8A88A;
+      margin-bottom: 8px; transition: color 0.2s;
+    }
+    .footer-links a:hover { color: #FFFEF9; }
+
+    .footer-bottom {
+      border-top: 1px solid #333;
+      padding-top: 20px;
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 12px;
+    }
+    .footer-bottom .copyright {
+      font-size: 12px; color: #6B6560;
+    }
+    /* ICP 备案号 - 必须展示 */
+    .icp {
+      font-size: 12px;
+    }
+    .icp a {
+      color: #B8A88A;
+      transition: color 0.2s;
+    }
+    .icp a:hover { color: #FFFEF9; }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 768px) {
+      .features-grid { grid-template-columns: 1fr; }
+      .screenshot-grid { grid-template-columns: repeat(2, 1fr); }
+      .nav-links { display: none; }
+      .hero { padding: 110px 16px 50px; }
+      .hero h1 { font-size: 28px; }
+      .showcase { padding: 50px 16px; }
+      .footer-top { flex-direction: column; }
+      .footer-bottom { flex-direction: column; text-align: center; }
+    }
+    @media (max-width: 480px) {
+      .screenshot-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+      .screenshot-hero { border-radius: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="#" class="logo">
+        <div class="logo-icon">📖</div>
+        dog-ear
+      </a>
+      <div class="nav-links">
+        <a href="#features">功能</a>
+        <a href="#screenshots">界面</a>
+        <a href="#demo">演示</a>
+        <a href="https://www.bookworm.icu" class="btn btn-primary" target="_blank">立即使用</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-badge">📚 智能阅读管理</div>
+    <h1>把读过的，<br><em>变成看得见的自己。</em></h1>
+    <p>一本书，不止是读过，而是成为你的一部分。<br>拍照识别、阅读记录、时间轴追踪，让每一次阅读都有迹可循。</p>
+    <div class="hero-actions">
+      <a href="https://www.bookworm.icu" class="btn btn-primary" target="_blank">打开书架</a>
+      <a href="#screenshots" class="btn btn-ghost">看看界面</a>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="features" id="features">
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon" style="background:#EDE4D3;">📷</div>
+        <h3>拍照识别书籍</h3>
+        <p>对着书封拍一张，AI 自动识别书名、作者、出版社、ISBN，一步添加到书架。</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:#E8DFD0;">🔍</div>
+        <h3>搜索添加</h3>
+        <p>支持豆瓣图书搜索，输入关键词即可找到书籍并添加，无需手动录入。</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:#EDE4D3;">📊</div>
+        <h3>阅读状态管理</h3>
+        <p>想读、在读、已读三档状态，一眼看清你的阅读进度和书架全貌。</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:#E8DFD0;">📝</div>
+        <h3>阅读记录</h3>
+        <p>随时记录读书心得、摘抄好句、标注页码和标签，积累你的阅读资产。</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:#EDE4D3;">📅</div>
+        <h3>时间轴</h3>
+        <p>按时间线回顾阅读历程，每一本书的加入、开读、完成都有迹可循。</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:#E8DFD0;">📱</div>
+        <h3>多端支持</h3>
+        <p>基于 uni-app 跨平台架构，支持 H5 网页和微信小程序，随时随地使用。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Screenshots -->
+  <section class="showcase" id="screenshots">
+    <div class="showcase-inner">
+      <div class="section-label">
+        <h2>界面预览</h2>
+        <p>温暖的书卷质感设计，让阅读管理也成为一种享受</p>
+      </div>
+
+      <!-- Hero screenshot -->
+      <div class="screenshot-hero">
+        <img src="imgs/demos/首页_书架页.png" alt="书架首页" loading="lazy">
+      </div>
+
+      <!-- Grid screenshots -->
+      <div class="screenshot-grid">
+        <div class="screenshot-item">
+          <img src="imgs/demos/书籍展示页.png" alt="书籍展示" loading="lazy">
+          <div class="screenshot-caption">
+            <span>书籍展示</span>
+            <small>封面、状态一目了然</small>
+          </div>
+        </div>
+        <div class="screenshot-item">
+          <img src="imgs/demos/上传书面页.png" alt="拍照识别" loading="lazy">
+          <div class="screenshot-caption">
+            <span>拍照识别</span>
+            <small>AI 自动提取书籍信息</small>
+          </div>
+        </div>
+        <div class="screenshot-item">
+          <img src="imgs/demos/添加阅读记录页.png" alt="阅读记录" loading="lazy">
+          <div class="screenshot-caption">
+            <span>阅读记录</span>
+            <small>心得、摘录、页码</small>
+          </div>
+        </div>
+        <div class="screenshot-item">
+          <img src="imgs/demos/记录页.png" alt="时间轴" loading="lazy">
+          <div class="screenshot-caption">
+            <span>时间轴</span>
+            <small>按日期回溯阅读历程</small>
+          </div>
+        </div>
+        <div class="screenshot-item">
+          <img src="imgs/demos/用户页.png" alt="阅读统计" loading="lazy">
+          <div class="screenshot-caption">
+            <span>阅读统计</span>
+            <small>数据驱动的阅读洞察</small>
+          </div>
+        </div>
+        <div class="screenshot-item">
+          <img src="imgs/demos/bookworm_reco_snapshot.png" alt="识别结果" loading="lazy">
+          <div class="screenshot-caption">
+            <span>识别结果</span>
+            <small>一键编辑、快速入库</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Demo Video -->
+  <section class="demo-section" id="demo">
+    <h2>功能演示</h2>
+    <p>看看完整的使用流程：拍照识别 → 添加书籍 → 记录心得</p>
+    <div class="video-wrapper">
+      <video controls preload="metadata" poster="imgs/demos/首页_书架页.png">
+        <source src="imgs/demos/bookworm_record.mp4" type="video/mp4">
+        您的浏览器不支持视频播放。
+      </video>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta">
+    <div class="cta-card">
+      <h2>开始你的阅读之旅</h2>
+      <p>免费使用，无需注册即可开始管理你的书架</p>
+      <div class="cta-actions">
+        <a href="https://www.bookworm.icu" class="btn btn-primary" target="_blank">打开网页版</a>
+        <a href="#screenshots" class="btn btn-ghost">了解更多</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <h3>📖 dog-ear 我的书架</h3>
+          <p>把读过的，变成看得见的自己。智能阅读管理，让每一次阅读都有迹可循。</p>
+        </div>
+        <div class="footer-links">
+          <h4>产品</h4>
+          <a href="https://www.bookworm.icu" target="_blank">网页版书架</a>
+          <a href="#features">功能介绍</a>
+          <a href="#screenshots">界面预览</a>
+        </div>
+        <div class="footer-links">
+          <h4>支持</h4>
+          <a href="https://www.bookworm.icu" target="_blank">在线使用</a>
+          <a href="#demo">功能演示</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div class="copyright">
+          © 2026 dog-ear 我的书架. All rights reserved.
+        </div>
+        <!--
+          ICP 备案号（腾讯云服务器部署，需在网站底部展示备案号）
+          请将下方备案号替换为实际备案号，并链接到工信部备案查询网站
+          格式示例：粤ICP备XXXXXXXX号
+          备案查询地址：https://beian.miit.gov.cn/
+        -->
+        <div class="icp">
+          <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">粤ICP备XXXXXXXX号</a>
+          &nbsp;|&nbsp;
+          <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">公安备案号</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

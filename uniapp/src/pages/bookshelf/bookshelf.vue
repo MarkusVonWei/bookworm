@@ -1,93 +1,134 @@
 <template>
   <view class="bookshelf-page">
-    <!-- 搜索栏 -->
-    <view class="search-bar" v-if="showSearch">
-      <input
-        class="search-input"
-        v-model="searchText"
-        placeholder="搜索书籍..."
-        confirm-type="search"
-        @confirm="onSearch"
-        @input="onSearchInput"
-      />
-      <view class="search-clear" @tap="clearSearch">×</view>
-    </view>
-
-    <!-- 状态入口 -->
-    <view class="status-entries">
+    <!-- 顶部 Tab -->
+    <view class="page-tabs">
       <view
-        class="status-entry"
-        v-for="entry in statusEntries"
-        :key="entry.status"
-        @tap="filterByStatus(entry.status)"
-      >
-        <text class="status-icon">{{ entry.icon }}</text>
-        <text class="status-name">{{ entry.status }}</text>
-        <text class="status-count">{{ entry.count }}</text>
-        <text class="status-arrow">→</text>
-      </view>
-    </view>
-
-    <!-- 书籍列表 -->
-    <view class="section-header">
-      <text class="section-title">{{ activeFilter || '全部书籍' }}</text>
-      <text class="section-count">{{ displayBooks.length }}本</text>
-    </view>
-
-    <!-- 空状态 -->
-    <view v-if="!loading && displayBooks.length === 0" class="empty-state">
-      <text class="empty-icon">📚</text>
-      <text class="empty-title">{{ searchText ? '未找到匹配书籍' : '书架还是空的' }}</text>
-      <text class="empty-hint">{{ searchText ? '换个关键词试试' : '点击下方按钮添加第一本书' }}</text>
-    </view>
-
-    <!-- 加载中 -->
-    <view v-if="loading" class="loading">
-      <view class="spinner"></view>
-      <text>加载中...</text>
-    </view>
-
-    <!-- 书籍网格 -->
-    <view v-else class="books-grid">
+        class="page-tab"
+        :class="{ 'page-tab--active': activeTab === 'shelf' }"
+        @tap="activeTab = 'shelf'"
+      >我的书架</view>
       <view
-        class="book-card"
-        v-for="book in displayBooks"
-        :key="book.id"
-        @tap="goToBookDetail(book.id)"
-      >
-        <view class="book-cover-wrap">
-          <image
-            v-if="book.cover_image"
-            :src="resolveImageUrl(book.cover_image)"
-            class="book-cover-img"
-            mode="aspectFit"
-          />
-          <view v-else class="book-cover-placeholder" :style="{ backgroundColor: getCoverColor(book.title) }">
-            <text class="placeholder-text">{{ book.title[0] }}</text>
-          </view>
+        class="page-tab"
+        :class="{ 'page-tab--active': activeTab === 'timeline' }"
+        @tap="goToTimeline"
+      >我的动态</view>
+    </view>
+
+    <!-- 书架内容 -->
+    <view v-if="activeTab === 'shelf'" class="shelf-content">
+      <!-- 工具栏 -->
+      <view class="toolbar">
+        <view class="book-count">
+          <text class="count-num">{{ displayBooks.length }}</text>
+          <text class="count-label">本书</text>
         </view>
-        <view class="book-card-info">
-          <text class="book-card-title">{{ book.title }}</text>
-          <text class="book-card-author" v-if="book.author">{{ book.author }}</text>
-          <view class="book-status-tag" :class="'status-' + statusClass(book.user_status)">
-            <text>{{ book.user_status }}</text>
+        <view class="toolbar-actions">
+          <view class="toolbar-btn" @tap="goToAddBook">
+            <text class="toolbar-btn-icon">⊞</text>
+            <text class="toolbar-btn-text">添加藏书</text>
+          </view>
+          <view class="toolbar-divider"></view>
+          <view class="toolbar-btn" @tap="toggleManage">
+            <text class="toolbar-btn-icon">{{ manageMode ? '✓' : '☰' }}</text>
+            <text class="toolbar-btn-text">{{ manageMode ? '完成' : '管理' }}</text>
           </view>
         </view>
       </view>
-    </view>
 
-    <!-- 快速记录入口 -->
-    <view class="quick-record" @tap="goToAddBook">
-      <text class="quick-record-icon">📷</text>
-      <view class="quick-record-info">
-        <text class="quick-record-title">快速记录</text>
-        <text class="quick-record-hint">拍照 / 搜索 / 手动添加</text>
+      <!-- 搜索栏 -->
+      <view class="search-bar" v-if="showSearch">
+        <input
+          class="search-input"
+          v-model="searchText"
+          placeholder="搜索书名或作者..."
+          confirm-type="search"
+          @confirm="onSearch"
+          @input="onSearchInput"
+        />
+        <view class="search-clear" @tap="clearSearch">×</view>
       </view>
-      <text class="quick-record-arrow">→</text>
+
+      <!-- 筛选标签 -->
+      <view class="filter-tabs">
+        <view
+          class="filter-tab"
+          :class="{ 'filter-tab--active': activeFilter === '' }"
+          @tap="activeFilter = ''"
+        >全部</view>
+        <view
+          class="filter-tab"
+          :class="{ 'filter-tab--active': activeFilter === '在读' }"
+          @tap="activeFilter = '在读'"
+        >在读</view>
+        <view
+          class="filter-tab"
+          :class="{ 'filter-tab--active': activeFilter === '想读' }"
+          @tap="activeFilter = '想读'"
+        >想读</view>
+        <view
+          class="filter-tab"
+          :class="{ 'filter-tab--active': activeFilter === '已读' }"
+          @tap="activeFilter = '已读'"
+        >已读</view>
+      </view>
+
+      <!-- 空状态 -->
+      <view v-if="!loading && displayBooks.length === 0" class="empty-state">
+        <text class="empty-icon">📚</text>
+        <text class="empty-title">{{ searchText ? '未找到匹配书籍' : '书架还是空的' }}</text>
+        <text class="empty-hint">{{ searchText ? '换个关键词试试' : '点击「添加藏书」开始记录' }}</text>
+      </view>
+
+      <!-- 加载中 -->
+      <view v-if="loading" class="loading">
+        <view class="spinner"></view>
+        <text>加载中...</text>
+      </view>
+
+      <!-- 书籍网格 -->
+      <view v-else class="books-grid">
+        <view
+          class="book-item"
+          v-for="book in displayBooks"
+          :key="book.id"
+          @tap="manageMode ? toggleSelect(book) : goToBookDetail(book.id)"
+        >
+          <!-- 管理模式选择框 -->
+          <view v-if="manageMode" class="book-checkbox">
+            <view class="checkbox" :class="{ 'checkbox--checked': selectedIds.includes(book.id) }">
+              <text v-if="selectedIds.includes(book.id)">✓</text>
+            </view>
+          </view>
+
+          <!-- 封面 -->
+          <view class="book-cover">
+            <image
+              v-if="book.cover_image"
+              :src="resolveImageUrl(book.cover_image)"
+              class="cover-img"
+              mode="aspectFill"
+            />
+            <view v-else class="cover-placeholder" :style="{ backgroundColor: getCoverColor(book.title) }">
+              <text class="cover-initial">{{ book.title[0] }}</text>
+            </view>
+          </view>
+
+          <!-- 标题 -->
+          <text class="book-title">{{ book.title }}</text>
+        </view>
+      </view>
+
+      <!-- 管理模式底部操作栏 -->
+      <view v-if="manageMode && selectedIds.length > 0" class="manage-bar">
+        <text class="manage-count">已选 {{ selectedIds.length }} 本</text>
+        <view class="manage-actions">
+          <button class="manage-btn manage-btn--danger" @tap="deleteSelected">删除</button>
+        </view>
+      </view>
     </view>
 
-    <!-- 搜索按钮 -->
-    <view class="search-fab" @tap="toggleSearch">
+    <!-- 搜索浮动按钮 -->
+    <view class="search-fab" @tap="toggleSearch" v-if="!manageMode">
       <text>🔍</text>
     </view>
   </view>
@@ -100,30 +141,15 @@ import * as api from '../../api/index'
 import { getCoverColor, resolveImageUrl } from '../../utils/coverColor'
 import { useToast } from '../../composables/useToast'
 
-function statusClass(status) {
-  const map = { '想读': 'want', '在读': 'reading', '已读': 'finished' }
-  return map[status] || 'want'
-}
-
 const toast = useToast()
 const books = ref([])
 const loading = ref(true)
 const searchText = ref('')
 const showSearch = ref(false)
 const activeFilter = ref('')
-
-// 状态统计
-const statusEntries = computed(() => {
-  const counts = { '想读': 0, '在读': 0, '已读': 0 }
-  books.value.forEach(b => {
-    if (counts[b.user_status] !== undefined) counts[b.user_status]++
-  })
-  return [
-    { status: '在读', count: counts['在读'], icon: '👁️' },
-    { status: '想读', count: counts['想读'], icon: '🔖' },
-    { status: '已读', count: counts['已读'], icon: '✓' },
-  ]
-})
+const activeTab = ref('shelf')
+const manageMode = ref(false)
+const selectedIds = ref([])
 
 // 展示的书籍
 const displayBooks = computed(() => {
@@ -155,22 +181,59 @@ async function loadBooks() {
   }
 }
 
-// 跳转到书籍详情
 function goToBookDetail(id) {
   uni.navigateTo({ url: `/pages/book-detail/book-detail?id=${id}` })
 }
 
-// 跳转到添加书籍
 function goToAddBook() {
   uni.navigateTo({ url: '/pages/add-book/add-book' })
 }
 
-// 按状态筛选
-function filterByStatus(status) {
-  activeFilter.value = activeFilter.value === status ? '' : status
+function goToTimeline() {
+  activeTab.value = 'timeline'
+  uni.switchTab({ url: '/pages/records/records' })
 }
 
-// 搜索
+function toggleManage() {
+  manageMode.value = !manageMode.value
+  if (!manageMode.value) {
+    selectedIds.value = []
+  }
+}
+
+function toggleSelect(book) {
+  const idx = selectedIds.value.indexOf(book.id)
+  if (idx >= 0) {
+    selectedIds.value.splice(idx, 1)
+  } else {
+    selectedIds.value.push(book.id)
+  }
+}
+
+async function deleteSelected() {
+  if (selectedIds.value.length === 0) return
+  uni.showModal({
+    title: '确认删除',
+    content: `确定要删除选中的 ${selectedIds.value.length} 本书吗？`,
+    success: async (res) => {
+      if (res.confirm) {
+        try {
+          for (const id of selectedIds.value) {
+            await api.deleteBook(id)
+          }
+          toast.success('删除成功')
+          selectedIds.value = []
+          manageMode.value = false
+          loadBooks()
+        } catch (err) {
+          console.error('删除失败:', err)
+          toast.error('删除失败')
+        }
+      }
+    }
+  })
+}
+
 function onSearch() {
   // 搜索通过 displayBooks computed 实时过滤
 }
@@ -188,7 +251,6 @@ function toggleSearch() {
   if (!showSearch.value) clearSearch()
 }
 
-// 生命周期
 onMounted(() => loadBooks())
 onShow(() => loadBooks())
 onPullDownRefresh(async () => {
@@ -200,90 +262,132 @@ onPullDownRefresh(async () => {
 <style scoped>
 .bookshelf-page {
   min-height: 100vh;
-  background: var(--color-bg-page);
-  padding: 12px 16px 100px;
+  background: #FFFFFF;
+  padding-bottom: 20px;
+}
+
+/* 顶部 Tab */
+.page-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  padding: 16px 0 12px;
+  background: #FFFFFF;
+  border-bottom: 1px solid #F5F5F5;
+}
+
+.page-tab {
+  font-size: 16px;
+  color: #999;
+  padding-bottom: 8px;
+  border-bottom: 2px solid transparent;
+}
+
+.page-tab--active {
+  color: #1A1A1A;
+  font-weight: 600;
+  border-bottom-color: #1A1A1A;
+}
+
+/* 工具栏 */
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 16px 8px;
+}
+
+.book-count {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.count-num {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1A1A1A;
+}
+
+.count-label {
+  font-size: 13px;
+  color: #999;
+}
+
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.toolbar-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border: 1px solid #E5E5E5;
+  border-radius: 20px;
+  background: #FFF;
+}
+
+.toolbar-btn-icon {
+  font-size: 14px;
+  color: #333;
+}
+
+.toolbar-btn-text {
+  font-size: 13px;
+  color: #333;
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 16px;
+  background: #E5E5E5;
 }
 
 /* 搜索栏 */
 .search-bar {
   display: flex;
   align-items: center;
-  background: var(--color-bg-card);
-  border-radius: var(--radius-full);
-  padding: 8px 16px;
-  margin-bottom: 16px;
-  box-shadow: var(--shadow-card);
+  background: #F5F5F5;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 8px 16px;
 }
 
 .search-input {
   flex: 1;
   font-size: 14px;
-  color: var(--color-text-primary);
+  color: #333;
 }
 
 .search-clear {
-  font-size: 20px;
-  color: var(--color-text-muted);
-  padding: 0 8px;
-}
-
-/* 状态入口 */
-.status-entries {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 20px;
-}
-
-.status-entry {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
-  background: var(--color-bg-card);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
-}
-
-.status-icon {
   font-size: 18px;
+  color: #999;
+  padding: 0 4px;
 }
 
-.status-name {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--color-text-primary);
-}
-
-.status-count {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--color-text-primary);
-  margin-left: auto;
-}
-
-.status-arrow {
-  font-size: 16px;
-  color: var(--color-text-muted);
-}
-
-/* 区域标题 */
-.section-header {
+/* 筛选标签 */
+.filter-tabs {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
+  gap: 8px;
+  padding: 8px 16px;
+  overflow-x: auto;
 }
 
-.section-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--color-text-primary);
-}
-
-.section-count {
+.filter-tab {
+  padding: 4px 12px;
+  border-radius: 14px;
   font-size: 12px;
-  color: var(--color-text-muted);
+  background: #F5F5F5;
+  color: #666;
+  white-space: nowrap;
+}
+
+.filter-tab--active {
+  background: #1A1A1A;
+  color: #FFF;
 }
 
 /* 书籍网格 */
@@ -291,150 +395,179 @@ onPullDownRefresh(async () => {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
-  margin-bottom: 20px;
+  padding: 8px 16px;
 }
 
-.book-card {
-  background: var(--color-bg-card);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  box-shadow: var(--shadow-book);
+.book-item {
+  position: relative;
 }
 
-.book-cover-wrap {
+.book-cover {
   width: 100%;
-  height: 160px;
+  padding-top: 133.33%; /* 4:3 ratio */
+  position: relative;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #F5F5F5;
 }
 
-.book-cover-img {
+.cover-img {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
 }
 
-.book-cover-placeholder {
+.cover-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-bg-warm);
 }
 
-.placeholder-text {
-  font-size: 32px;
+.cover-initial {
+  font-size: 28px;
   color: rgba(255, 255, 255, 0.9);
   font-weight: 700;
 }
 
-.book-card-info {
-  padding: 8px;
-}
-
-.book-card-title {
+.book-title {
   display: block;
+  margin-top: 6px;
   font-size: 12px;
-  font-weight: 500;
-  color: var(--color-text-primary);
-  margin-bottom: 2px;
+  color: #333;
+  line-height: 1.4;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.book-card-author {
-  display: block;
-  font-size: 11px;
-  color: var(--color-text-secondary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+/* 管理模式选择框 */
+.book-checkbox {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 10;
 }
 
-.book-status-tag {
-  display: inline-block;
-  margin-top: 4px;
-  padding: 1px 6px;
-  border-radius: var(--radius-sm);
-  font-size: 10px;
-}
-
-.status-want {
-  background: var(--color-bg-warm);
-  color: var(--color-text-secondary);
-}
-
-.status-reading {
-  background: var(--color-primary);
-  color: var(--color-text-white);
-}
-
-.status-finished {
-  background: var(--color-finished);
-  color: var(--color-text-white);
-}
-
-/* 快速记录 */
-.quick-record {
-  position: fixed;
-  bottom: 70px;
-  left: 16px;
-  right: 16px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  background: var(--color-bg-card);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-float);
-}
-
-.quick-record-icon {
-  width: 40px;
-  height: 40px;
-  background: var(--color-bg-warm);
-  border-radius: var(--radius-md);
+.checkbox {
+  width: 22px;
+  height: 22px;
+  border: 2px solid #FFF;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  color: #FFF;
+  font-size: 12px;
 }
 
-.quick-record-info {
-  flex: 1;
+.checkbox--checked {
+  background: #E74C3C;
+  border-color: #FFF;
 }
 
-.quick-record-title {
-  display: block;
+/* 管理模式底部操作栏 */
+.manage-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: #FFF;
+  border-top: 1px solid #F0F0F0;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.manage-count {
   font-size: 14px;
+  color: #666;
+}
+
+.manage-btn {
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  border: none;
+}
+
+.manage-btn--danger {
+  background: #E74C3C;
+  color: #FFF;
+}
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 16px;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.empty-title {
+  font-size: 15px;
   font-weight: 600;
-  color: var(--color-text-primary);
+  color: #333;
+  margin-bottom: 4px;
 }
 
-.quick-record-hint {
-  display: block;
-  font-size: 11px;
-  color: var(--color-text-muted);
+.empty-hint {
+  font-size: 13px;
+  color: #999;
 }
 
-.quick-record-arrow {
-  font-size: 16px;
-  color: var(--color-text-muted);
+/* 加载 */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px;
+  color: #999;
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #E5E5E5;
+  border-top-color: #1A1A1A;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 8px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 /* 搜索浮动按钮 */
 .search-fab {
   position: fixed;
-  bottom: 130px;
+  bottom: 24px;
   right: 20px;
   width: 44px;
   height: 44px;
-  background: var(--color-primary);
-  color: var(--color-text-white);
+  background: #1A1A1A;
+  color: #FFF;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 18px;
-  box-shadow: var(--shadow-float);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 </style>

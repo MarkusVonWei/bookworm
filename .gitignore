@@ -72,3 +72,40 @@ htmlcov/
 # uniapp
 uniapp/node_moduels
 uniapp/dist
+
+# Backups
+*_backup_*/
+*_backp_*/
+
+# Logs and temp files
+*.log
+llm_conversation.txt
+original_input.txt
+miniprogram_error.log
+
+# Build outputs
+uniapp/dist/
+uniapp/node_modules/
+uniapp/.hbuilderx/
+
+# Data
+data/
+logs/
+errors/
+
+# Scripts (utility)
+*.sh
+!setup_server.sh
+
+# Images (keep only reference)
+imgs/*.png
+imgs/*.jpg
+imgs/*.mp4
+!imgs/demos/
+
+# Misc
+to_discuss.md
+shelf_refer.png
+dogear.jpg
+wechat-miniprogram/config
+miniprogram-scripts/

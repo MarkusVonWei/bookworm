@@ -1,0 +1,45 @@
+{
+  "pages": [
+    "pages/bookshelf/bookshelf",
+    "pages/records/records",
+    "pages/my/my",
+    "pages/add-book/add-book",
+    "pages/book-detail/book-detail",
+    "pages/profile/profile"
+  ],
+  "lazyCodeLoading": "requiredComponents",
+  "window": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "我的书架",
+    "navigationBarBackgroundColor": "#F5F0E8",
+    "backgroundColor": "#F5F0E8",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "color": "#B8A88A",
+    "selectedColor": "#1A1A1A",
+    "backgroundColor": "#FFFEF9",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/bookshelf/bookshelf",
+        "text": "书架",
+        "iconPath": "static/tab-home.png",
+        "selectedIconPath": "static/tab-home-active.png"
+      },
+      {
+        "pagePath": "pages/records/records",
+        "text": "记录",
+        "iconPath": "static/tab-records.png",
+        "selectedIconPath": "static/tab-records-active.png"
+      },
+      {
+        "pagePath": "pages/my/my",
+        "text": "我的",
+        "iconPath": "static/tab-my.png",
+        "selectedIconPath": "static/tab-my-active.png"
+      }
+    ]
+  },
+  "usingComponents": {}
+}
