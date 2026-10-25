@@ -1,0 +1,14 @@
+[
+  {
+    "file": "book_cover_AI_agent_invest.jpg",
+    "result": {
+      "title": "AI投资指南：用大模型与智能体构建个人投研体系（豆包龙虾版）",
+      "author": "张雷 齐新阳",
+      "publisher": "电子工业出版社",
+      "publish_date": null,
+      "isbn": null,
+      "category": "投资研究与人工智能应用"
+    },
+    "elapsed": "10.55s"
+  }
+]
