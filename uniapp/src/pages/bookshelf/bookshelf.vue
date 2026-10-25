@@ -400,13 +400,14 @@ onPullDownRefresh(async () => {
 
 .book-item {
   position: relative;
+  overflow: hidden;
+  border-radius: 6px;
 }
 
 .book-cover {
   width: 100%;
-  padding-top: 133.33%; /* 4:3 ratio */
+  padding-top: 133.33%; /* 3:4 ratio */
   position: relative;
-  border-radius: 6px;
   overflow: hidden;
   background: #F5F5F5;
 }
@@ -415,6 +416,8 @@ onPullDownRefresh(async () => {
   position: absolute;
   top: 0;
   left: 0;
+  right: 0;
+  bottom: 0;
   width: 100%;
   height: 100%;
 }
@@ -423,8 +426,8 @@ onPullDownRefresh(async () => {
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  right: 0;
+  bottom: 0;
   display: flex;
   align-items: center;
   justify-content: center;
