@@ -1,0 +1,75 @@
+{
+  "pages": [
+    {
+      "path": "pages/bookshelf/bookshelf",
+      "style": {
+        "navigationBarTitleText": "我的书架",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/records/records",
+      "style": {
+        "navigationBarTitleText": "阅读记录",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/my/my",
+      "style": {
+        "navigationBarTitleText": "我的阅读资产"
+      }
+    },
+    {
+      "path": "pages/add-book/add-book",
+      "style": {
+        "navigationBarTitleText": "添加书籍"
+      }
+    },
+    {
+      "path": "pages/book-detail/book-detail",
+      "style": {
+        "navigationBarTitleText": "书籍详情"
+      }
+    },
+    {
+      "path": "pages/profile/profile",
+      "style": {
+        "navigationBarTitleText": "个人中心"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "我的书架",
+    "navigationBarBackgroundColor": "#F5F0E8",
+    "backgroundColor": "#F5F0E8",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "color": "#B8A88A",
+    "selectedColor": "#1A1A1A",
+    "backgroundColor": "#FFFEF9",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/bookshelf/bookshelf",
+        "text": "书架",
+        "iconPath": "static/tab-home.png",
+        "selectedIconPath": "static/tab-home-active.png"
+      },
+      {
+        "pagePath": "pages/records/records",
+        "text": "记录",
+        "iconPath": "static/tab-records.png",
+        "selectedIconPath": "static/tab-records-active.png"
+      },
+      {
+        "pagePath": "pages/my/my",
+        "text": "我的",
+        "iconPath": "static/tab-my.png",
+        "selectedIconPath": "static/tab-my-active.png"
+      }
+    ]
+  }
+}

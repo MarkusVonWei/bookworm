@@ -68,3 +68,7 @@ htmlcov/
 
 # MyPy
 .mypy_cache/
+
+# uniapp
+uniapp/node_moduels
+uniapp/dist
