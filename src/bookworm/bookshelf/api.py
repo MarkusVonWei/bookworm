@@ -1,5 +1,6 @@
 """书架API接口"""
 
+import logging
 import os
 import uuid
 from typing import List, Optional, Dict, Any
@@ -15,6 +16,8 @@ from .models import Book, ReadingRecord, ReadingStatus, User
 from .service import BookshelfService
 from .user_service import get_or_create_anonymous_user, register_user, login_user
 from .recognition import recognize_book_from_image, fetch_book_metadata
+
+logger = logging.getLogger("bookworm.api")
 
 router = APIRouter(prefix="/api", tags=["书架"])
 
