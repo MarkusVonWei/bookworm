@@ -12,9 +12,10 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     简单的内存限流中间件
 
     策略：滑动窗口限流
-    - 每个 IP 在 10 秒内最多 100 次请求
+    - 每个 IP 在 10 秒内最多 100 次请求（普通请求，含 GET）
     - 对于识别/添加书籍等写操作，限制更严格（60秒10次）
     - 只对写操作 (POST/PUT/DELETE/PATCH) 应用严格限制，GET 请求使用默认限制
+    - 两类请求分开计数：GET 浏览不占用写操作额度
     """
 
     def __init__(self, app,
@@ -32,7 +33,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         # 信任的代理 IP 列表（只信任这些代理转发的 X-Forwarded-For）
         self.trusted_proxies = set(trusted_proxies or [])
 
-        # 请求记录 {ip: [(timestamp, path), ...]}
+        # 请求记录 {ip: [(timestamp, is_heavy), ...]}
         self.requests = {}
 
         # 需要更严格限制的路径前缀（只对写操作生效）
@@ -55,11 +56,11 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
         return client_ip
 
-    def _clean_old_requests(self, ip: str, window: int):
-        """清理过期的请求记录"""
-        cutoff = time.time() - window
+    def _clean_old_requests(self, ip: str):
+        """清理过期的请求记录（按最长窗口清理，保证写操作窗口计数准确）"""
+        cutoff = time.time() - max(self.default_window, self.upload_window)
         if ip in self.requests:
-            self.requests[ip] = [(t, p) for t, p in self.requests[ip] if t > cutoff]
+            self.requests[ip] = [(t, h) for t, h in self.requests[ip] if t > cutoff]
 
             # 如果该 IP 的记录为空，删除该 key 以释放内存
             if not self.requests[ip]:
@@ -79,7 +80,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         # 清理所有过期记录
         empty_ips = []
         for ip, records in self.requests.items():
-            self.requests[ip] = [(t, p) for t, p in records if t > cutoff]
+            self.requests[ip] = [(t, h) for t, h in records if t > cutoff]
             if not self.requests[ip]:
                 empty_ips.append(ip)
 
@@ -87,10 +88,18 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         for ip in empty_ips:
             del self.requests[ip]
 
-    def _check_rate_limit(self, ip: str, path: str, method: str) -> tuple[bool, int, int]:
+    def _count_requests(self, ip: str, is_heavy: bool) -> int:
+        """统计当前窗口内该 IP 的请求数（写操作与普通请求分开计数）"""
+        now = time.time()
+        records = self.requests.get(ip, [])
+        if is_heavy:
+            return sum(1 for t, h in records if h and now - t < self.upload_window)
+        return sum(1 for t, h in records if now - t < self.default_window)
+
+    def _check_rate_limit(self, ip: str, path: str, method: str) -> tuple[bool, int, int, bool]:
         """
         检查是否超过限流
-        返回: (是否允许, 限制次数, 窗口秒数)
+        返回: (是否允许, 限制次数, 窗口秒数, 是否写操作)
         """
         # 判断使用哪个限制策略
         # 只对写操作 (POST/PUT/DELETE/PATCH) 应用严格限制
@@ -101,22 +110,22 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         window = self.upload_window if is_heavy else self.default_window
 
         # 清理过期记录
-        self._clean_old_requests(ip, window)
+        self._clean_old_requests(ip)
 
         # 定期清理所有过期 IP
         self._cleanup_stale_ips()
 
-        # 检查当前窗口内的请求数
-        current_count = len(self.requests.get(ip, []))
+        # 检查当前窗口内的请求数（仅统计同类请求）
+        current_count = self._count_requests(ip, is_heavy)
 
         if current_count >= limit:
-            return False, limit, window
+            return False, limit, window, is_heavy
 
         # 记录本次请求
         if ip not in self.requests:
             self.requests[ip] = []
-        self.requests[ip].append((time.time(), path))
-        return True, limit, window
+        self.requests[ip].append((time.time(), is_heavy))
+        return True, limit, window, is_heavy
 
     async def dispatch(self, request: Request, call_next):
         # 获取客户端 IP（只信任受信任代理的 X-Forwarded-For）
@@ -126,7 +135,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         method = request.method
 
         # 检查限流
-        allowed, limit, window = self._check_rate_limit(client_ip, path, method)
+        allowed, limit, window, is_heavy = self._check_rate_limit(client_ip, path, method)
 
         if not allowed:
             return Response(
@@ -147,7 +156,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
         # 添加限流信息到响应头
         response.headers["X-RateLimit-Limit"] = str(limit)
-        response.headers["X-RateLimit-Remaining"] = str(max(0, limit - len(self.requests.get(client_ip, []))))
+        response.headers["X-RateLimit-Remaining"] = str(max(0, limit - self._count_requests(client_ip, is_heavy)))
         response.headers["X-Process-Time"] = f"{process_time:.3f}"
 
         return response

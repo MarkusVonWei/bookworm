@@ -295,6 +295,30 @@ OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "https://token-plan-cn.xiaomimimo
 - 考虑异步处理模式
 - 添加进度提示
 
+### 6. 限流计数必须按类别分开
+
+**问题**：限流中间件中，所有请求（GET+POST）共用一个计数列表，严格阈值（如写操作10次/60秒）却用总请求数判断。用户正常浏览产生的 ~10 个 GET 请求会把上传额度全部吃掉，导致第 1 次上传就返回 429。
+
+**附带问题**：清理过期记录时按"当前请求的窗口"清理，GET 的 10 秒窗口会清掉写操作需要的 60 秒记录，导致限流时紧时松。
+
+**解决方案**：
+- 请求记录增加类型标记 `(timestamp, is_heavy)`，写操作与普通请求分开计数
+- 清理记录统一按最长窗口（`max(default_window, upload_window)`）保留历史
+- 保证写操作的 60 秒窗口计数不被中途 GET 请求破坏
+
+```python
+# 错误：所有请求混在一起计数
+current_count = len(self.requests.get(ip, []))
+
+# 正确：按类别分开计数
+def _count_requests(self, ip: str, is_heavy: bool) -> int:
+    now = time.time()
+    records = self.requests.get(ip, [])
+    if is_heavy:
+        return sum(1 for t, h in records if h and now - t < self.upload_window)
+    return sum(1 for t, h in records if now - t < self.default_window)
+```
+
 ## 贡献指南
 
 1. Fork项目

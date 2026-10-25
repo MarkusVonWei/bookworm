@@ -113,3 +113,6 @@ miniprogram-scripts/
 # Build outputs (generated code)
 miniprogram/common/vendor.js
 miniprogram/common/vendor.js.map
+
+# MiMoCode plans
+.mimocode/
